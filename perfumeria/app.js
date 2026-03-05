@@ -74,15 +74,11 @@ const DECANT_SIZES = [3, 5, 10];
 const DECANT_MULTIPLIER = 1.75;
 const PAGE_SIZE = 6;
 
-// Semilla (stock=0)
-const SEED_PRODUCTS = [
-  { id: 1, name: 'Midnight Bloom', brand: 'Essence Lux', family: 'Oriental', ml: 100, buyPrice: 85, sellPrice: 130, stock: 0, openedMl: 0, sku: 'PER-001' },
-  { id: 2, name: 'Citrus Horizon', brand: 'Aura Mar', family: 'Cítrico', ml: 100, buyPrice: 64.5, sellPrice: 95, stock: 0, openedMl: 0, sku: 'PER-042' },
-  { id: 3, name: 'Bleu de Chanel', brand: 'Chanel', family: 'Amaderado', ml: 100, buyPrice: 120, sellPrice: 185, stock: 0, openedMl: 0, sku: 'PER-005' },
-];
+// Inventario vacío — el usuario agrega sus propios perfumes
+const SEED_PRODUCTS = [];
 
 let products = JSON.parse(localStorage.getItem('pf_v3_products')) || SEED_PRODUCTS;
-let nextId = JSON.parse(localStorage.getItem('pf_v3_nextId')) || (Math.max(0, ...products.map(p => p.id)) + 1);
+let nextId = JSON.parse(localStorage.getItem('pf_v3_nextId')) || (products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1);
 let sales = JSON.parse(localStorage.getItem('pf_v4_sales')) || [];
 let currentTab = 'inventory';
 let filterCat = 'Todos';
@@ -93,6 +89,58 @@ function save() {
   localStorage.setItem('pf_v3_products', JSON.stringify(products));
   localStorage.setItem('pf_v3_nextId', JSON.stringify(nextId));
   localStorage.setItem('pf_v4_sales', JSON.stringify(sales));
+}
+
+// ── EXPORTAR / IMPORTAR RESPALDO ──────────────────────────────
+function exportData() {
+  const backup = {
+    version: 'pf_v4',
+    exportedAt: new Date().toISOString(),
+    products,
+    nextId,
+    sales
+  };
+  const json = JSON.stringify(backup, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const fecha = new Date().toLocaleDateString('es-MX').replace(/\//g, '-');
+  a.href = url;
+  a.download = `PerfumeFlow_Respaldo_${fecha}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('✅ Respaldo exportado correctamente');
+}
+
+function importData() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json,application/json';
+  input.onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (!data.products || !Array.isArray(data.products)) {
+          showToast('❌ Archivo inválido: no es un respaldo de PerfumeFlow', 'error');
+          return;
+        }
+        if (!confirm(`¿Restaurar respaldo del ${new Date(data.exportedAt).toLocaleString()}?\n\nEsto reemplazará TODO el inventario y ventas actuales.`)) return;
+        products = data.products;
+        nextId = data.nextId || (Math.max(0, ...products.map(p => p.id)) + 1);
+        sales = data.sales || [];
+        save();
+        showToast('✅ Respaldo restaurado. Recargando...');
+        setTimeout(() => location.reload(), 1500);
+      } catch {
+        showToast('❌ Error al leer el archivo. Asegúrate de que sea un respaldo válido.', 'error');
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
 }
 
 function showToast(msg, type = 'success') {

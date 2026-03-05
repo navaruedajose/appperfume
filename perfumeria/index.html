@@ -13,6 +13,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
         rel="stylesheet" />
     <link rel="stylesheet" href="styles.css" />
+    <!-- Vercel Web Analytics (para sitios HTML estáticos) -->
+    <script defer src="/_vercel/insights/script.js"></script>
 </head>
 
 <body>
@@ -29,8 +31,7 @@
                 <label class="login-label">Nombre de usuario</label>
                 <div class="login-input-wrap">
                     <span class="material-symbols-outlined login-input-icon">person</span>
-                    <input type="text" id="login-username" class="login-input"
-                        placeholder="Escribe tu usuario..."
+                    <input type="text" id="login-username" class="login-input" placeholder="Escribe tu usuario..."
                         autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
                         onkeydown="if(event.key==='Enter') doLogin()" />
                 </div>
@@ -69,6 +70,16 @@
                     <span class="material-symbols-outlined">receipt_long</span><span>Reportes y Ventas</span>
                 </a>
             </nav>
+
+            <!-- Backup -->
+            <div class="sidebar-backup">
+                <button class="sidebar-backup-btn" onclick="exportData()" title="Descargar respaldo JSON">
+                    <span class="material-symbols-outlined">download</span><span>Exportar Respaldo</span>
+                </button>
+                <button class="sidebar-backup-btn import" onclick="importData()" title="Restaurar desde archivo JSON">
+                    <span class="material-symbols-outlined">upload</span><span>Importar Respaldo</span>
+                </button>
+            </div>
 
         </aside>
 
